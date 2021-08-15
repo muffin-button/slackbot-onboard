@@ -1,0 +1,7 @@
+__pycache__
+env/
+*.crt
+*.key
+*.pem
+*.db
+k8s/
