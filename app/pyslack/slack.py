@@ -91,6 +91,10 @@ def publishView():
                     "text": "Select channels :speech_balloon: ",
                     "emoji": True
             },
+            "filter": {
+                "include": ["private"],
+                "exclude_bot_users": True
+            },
             "action_id": "set-conversations"
         }
     })
