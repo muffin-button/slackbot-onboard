@@ -1,9 +1,13 @@
 # Public packages
-import json
 import logging
-from fastapi import FastAPI, Request
+from typing import Any
 from slack_sdk.errors import SlackApiError
-from urllib.parse import unquote
+import os
+from slack_sdk.web import WebClient
+from slack_sdk.socket_mode import SocketModeClient
+from slack_sdk.socket_mode.response import SocketModeResponse
+from slack_sdk.socket_mode.request import SocketModeRequest
+from threading import Event
 
 # Local modules
 from pyslack.db import *
@@ -19,29 +23,19 @@ logging.basicConfig(
 # publish initial view at startup
 publishView()
 
-# Create API
-app = FastAPI()
 
+# Initialize SocketModeClient with an app-level token + WebClient
+client = SocketModeClient(
+    # This app-level token will be used only for establishing a connection
+    app_token=os.environ.get("SLACK_APP_TOKEN"),  # xapp-A111-222-xyz
+    # You will be using this WebClient for performing Web API calls in listeners
+    web_client=WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))  # xoxb-111-222-xyz
+)
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.post("/message")
-async def incomingWebhook(req: Request):
+def incomingWebhook(payload: Any):
     logging.info(f'{__name__}.incomingWebhook :: Received message')
     try:
-        body = await req.body()
-
-        payload_string = body[8:].decode('utf-8')
-        unquoted = unquote(payload_string)
-        payload = json.loads(unquoted)
-
         logging.info(f'payload {str(payload)}')
-
-        isValid = generateSlackSignature(body, req)
-        assert isValid, 'Invalid request signature'
 
         if 'actions' in payload:
             actions = payload['actions']
@@ -85,7 +79,8 @@ async def incomingWebhook(req: Request):
 
                         logging.info(f'{__name__}.incomingWebhook :: Inviting [{user}] to [{channel_name}]')
 
-                        client.conversations_invite(channel=channel_id, users=user)
+                        #client.conversations_invite(channel=channel_id, users=user)
+                        client.web_client.conversations_invite(channel=channel_id, users=user)
 
                     publishView()
 
@@ -102,7 +97,8 @@ async def incomingWebhook(req: Request):
 
                         logging.info(f'{__name__}.incomingWebhook :: Kicking [{user}] from [{channel_name}]')
 
-                        client.conversations_kick(channel=channel_id, user=user)
+                        client.web_client.conversations_kick(channel=channel_id, user=user)
+                        
 
                     publishView()
 
@@ -112,3 +108,24 @@ async def incomingWebhook(req: Request):
         # You will get a SlackApiError if "ok" is False
         # str like 'invalid_auth', 'channel_not_found'
         assert e.response["error"]
+
+def process(client: SocketModeClient, req: SocketModeRequest):
+    logging.info(req.type)
+    #dir(req)
+    if req.type == "interactive":
+        # Acknowledge the request anyway
+        response = SocketModeResponse(envelope_id=req.envelope_id)
+        client.send_socket_mode_response(response)
+
+        logging.info(req.payload)
+        incomingWebhook(req.payload)
+
+
+
+# Add a new listener to receive messages from Slack
+# You can add more listeners like this
+client.socket_mode_request_listeners.append(process)
+# Establish a WebSocket connection to the Socket Mode servers
+client.connect()
+# Just not to stop this process
+Event().wait()

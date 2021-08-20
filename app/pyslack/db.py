@@ -17,22 +17,22 @@ _db = getDb()
 _db.execute('''CREATE TABLE IF NOT EXISTS protected_channels (id TEXT NOT NULL UNIQUE PRIMARY KEY, name TEXT NOT NULL)''')
 
 
-def getProtectedChannel(id: str, db=_db):
+def getProtectedChannel(id: str):
     """
     Retrieves details for a protected channel from the database
     """
-
+    db = getDb()
     logging.info(f'{__name__}.getProtectedChannel :: Getting record with id [{id}]')
 
     exists = db.execute('''SELECT id, name FROM protected_channels WHERE id = :id''', {'id': id}).fetchone()
     return exists
 
 
-def addProtectedChannel(id: str, name: str, db=_db):
+def addProtectedChannel(id: str, name: str):
     """
     Adds a protected channel to the database
     """
-
+    db = getDb()
     logging.info(f'{__name__}.addProtectedChannel :: Adding record [({id}, {name})]')
 
     exists = getProtectedChannel(id)
@@ -48,11 +48,11 @@ def addProtectedChannel(id: str, name: str, db=_db):
     return getProtectedChannel(id)
 
 
-def deleteProtectedChannel(id: str, db=_db):
+def deleteProtectedChannel(id: str):
     """
     Deletes a protected channel from the database
     """
-
+    db = getDb()
     logging.info(f'{__name__}.deleteProtectedChannel :: Deleting record with id [{id}]')
 
     db.execute('''DELETE FROM protected_channels WHERE id = :id''', {'id': id})
@@ -60,11 +60,11 @@ def deleteProtectedChannel(id: str, db=_db):
     return
 
 
-def getProtectedChannels(db=_db):
+def getProtectedChannels():
     """
     Retrieves a list of all protected channels from the database
     """
-
+    db = getDb()
     logging.info(f'{__name__}.getProtectedChannels :: Getting all records')
 
     query = db.execute('SELECT id, name FROM protected_channels')

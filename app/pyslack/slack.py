@@ -2,30 +2,13 @@
 import os
 import logging
 from slack_sdk import WebClient
-from slack_sdk.signature import SignatureVerifier
-from fastapi import Request
-from starlette.datastructures import FormData
 
 # Local modules
 from pyslack.db import *
 
 
 slack_token = os.environ["SLACK_BOT_TOKEN"]
-slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
 client = WebClient(token=slack_token)
-
-signature_verifier = SignatureVerifier(
-    signing_secret=slack_signing_secret
-)
-
-
-def generateSlackSignature(body: FormData, req: Request):
-    """
-    Generates a message signature by hashing the timestamp, payload, and a shared signing secret
-    """
-    return signature_verifier.is_valid(
-        body, req.headers.get('X-Slack-Request-Timestamp'),
-        req.headers.get('X-Slack-Signature'))
 
 
 def getChannelName(id: str) -> str:
