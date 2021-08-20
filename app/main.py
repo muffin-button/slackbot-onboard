@@ -12,7 +12,7 @@ from pyslack.slack import *
 
 logging.basicConfig(
     format='[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s',
-    level=logging.INFO,
+    level=logging.DEBUG,
     datefmt='%Y-%m-%d %H:%M:%S %z'
 )
 
@@ -63,7 +63,7 @@ async def incomingWebhook(req: Request):
 
                     publishView()
 
-                if action['action_id'] == 'unset-conversation':
+                elif action['action_id'] == 'unset-conversation':
                     action_value = action['value']
 
                     logging.info(f'{__name__}.incomingWebhook :: Unsetting conversation:')
@@ -76,9 +76,10 @@ async def incomingWebhook(req: Request):
                     logging.info(f'{__name__}.incomingWebhook :: Onboarding user:')
                     logging.info(action['selected_user'])
 
+                    user = action['selected_user']
+
                     channels = getProtectedChannels()
                     for channel in channels:
-                        user = action['selected_user']
                         channel_id = channel['id']
                         channel_name = channel['name']
 
@@ -92,9 +93,10 @@ async def incomingWebhook(req: Request):
                     logging.info(f'{__name__}.incomingWebhook :: Outprocessing user:')
                     logging.info(action['selected_user'])
 
+                    user = action['selected_user']
+
                     channels = getProtectedChannels()
                     for channel in channels:
-                        user = action['selected_user']
                         channel_id = channel['id']
                         channel_name = channel['name']
 

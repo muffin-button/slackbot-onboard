@@ -45,7 +45,7 @@ def addProtectedChannel(id: str, name: str, db=_db):
         cur.execute('''INSERT INTO protected_channels (id, name) VALUES (?, ?)''', (id, name))
         db.commit()
 
-    return getProtectedChannel(name)
+    return getProtectedChannel(id)
 
 
 def deleteProtectedChannel(id: str, db=_db):
@@ -55,9 +55,9 @@ def deleteProtectedChannel(id: str, db=_db):
 
     logging.info(f'{__name__}.deleteProtectedChannel :: Deleting record with id [{id}]')
 
-    exists = db.execute('''DELETE FROM protected_channels WHERE id = :id''', {'id': id})
+    db.execute('''DELETE FROM protected_channels WHERE id = :id''', {'id': id})
     db.commit()
-    return exists
+    return
 
 
 def getProtectedChannels(db=_db):
